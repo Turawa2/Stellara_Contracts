@@ -1,0 +1,10 @@
+﻿services:
+  db:
+    image: postgres:15-alpine
+    container_name: stellara_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: stellara_db
+    ports:
+      - "5433:5432"

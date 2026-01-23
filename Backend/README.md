@@ -85,3 +85,37 @@ Create a .env file in the project root: PORT=3001 DATABASE_URL=postgresql://user
 🧪 Testing npm run test npm run test:e2e
 
 🤝 Contributing The first step is to Fork the repository then you Create a feature branch Commit your changes git pull latest changes to avoid conflicts Submit a pull request Issues and feature requests are welcome.
+
+🗄️ Database & Migrations Workflow
+
+Para garantizar la integridad de los datos y la consistencia entre entornos, este proyecto utiliza **TypeORM Migrations** y **Docker**.
+
+1. Infraestructura Local
+Levanta la base de datos PostgreSQL utilizando el contenedor preconfigurado:
+bash
+docker-compose up -d
+
+Nota: La base de datos está mapeada al puerto 5433 para evitar conflictos con instalaciones locales preexistentes.
+
+2. Comandos de Migración
+Utiliza estos scripts para gestionar el esquema de la base de datos sin usar synchronize: true:
+
+Generar Migración: (Ejecutar después de modificar una entidad .entity.ts)
+
+Bash
+npm run migration:generate -- src/database/migrations/NombreDeLaMigracion
+Aplicar Migraciones: (Sincroniza tu base de datos local con los últimos cambios)
+
+Bash
+npm run migration:run
+Revertir Cambios: (Deshace la última migración aplicada)
+
+Bash
+npm run migration:revert
+
+3. Buenas Prácticas 
+Nunca modifiques manualmente las tablas en la base de datos; usa siempre archivos de migración.
+
+Revisa el archivo generado en src/database/migrations/ antes de hacer commit para asegurar que el SQL es el esperado.
+
+Asegúrate de que tu archivo .env apunte al puerto 5433 si usas el entorno Docker provisto.
