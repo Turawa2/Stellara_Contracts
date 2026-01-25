@@ -14,6 +14,32 @@ All within a single decentralized application.
 
 ---
 
+## 🎉 Latest Updates (January 2026)
+
+### ✅ Academy Vesting Contract (NEW)
+**Complete time-based vesting system for academy rewards**
+- ✅ Secure vesting with cliff periods
+- ✅ Single-claim semantics (atomic claims)
+- ✅ Governance revocation with timelock
+- ✅ 18+ comprehensive tests
+- ✅ 2000+ lines of documentation
+- ✅ Production ready
+
+📚 **Get Started**: [Academy Vesting Overview](./Contracts/contracts/academy/README.md) | [5-Min Guide](./Contracts/contracts/academy/VESTING_QUICK_REFERENCE.md)
+
+### ✅ Upgradeability & Governance System
+**Secure contract upgrades with multi-sig approval**
+- ✅ Multi-signature governance (M-of-N approval)
+- ✅ Timelock safety delays (1-24+ hours)
+- ✅ Role-based access control
+- ✅ 10+ comprehensive tests
+- ✅ 2000+ lines of documentation
+- ✅ Production ready
+
+📚 **Get Started**: [Governance Overview](./Contracts/QUICK_REFERENCE.md) | [Design Guide](./Contracts/UPGRADEABILITY.md)
+
+---
+
 ## 🧠 Core Features
 
 ### 🤖 Stellara AI Assistant
