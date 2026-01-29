@@ -2,21 +2,38 @@
 #[cfg(test)]
 mod regression {
     use super::*;
-    use soroban_sdk::{testutils::*, Address, Env};
+    use soroban_sdk::{testutils::Address as _, testutils::Ledger as _, token, Address, Env};
+
+    fn set_timestamp(env: &Env, timestamp: u64) {
+        let mut ledger_info = env.ledger().get();
+        ledger_info.timestamp = timestamp;
+        env.ledger().set(ledger_info);
+    }
 
     #[test]
     fn test_grant_and_claim_regression() {
         let env = Env::default();
-        let admin = Address::random(&env);
-        let reward_token = Address::random(&env);
-        let governance = Address::random(&env);
-        let beneficiary = Address::random(&env);
-        AcademyVestingContract::init(env.clone(), admin.clone(), reward_token.clone(), governance.clone()).unwrap();
-        let grant_id = AcademyVestingContract::grant_vesting(env.clone(), admin.clone(), beneficiary.clone(), 1000, 0, 0, 1000).unwrap();
-        env.ledger().set_timestamp(1000);
-        let _ = AcademyVestingContract::claim(env.clone(), grant_id, beneficiary.clone());
+        env.mock_all_auths();
+
+        let contract_id = env.register_contract(None, AcademyVestingContract);
+        let client = AcademyVestingContractClient::new(&env, &contract_id);
+
+        let admin = Address::generate(&env);
+        let governance = Address::generate(&env);
+        let beneficiary = Address::generate(&env);
+
+        let issuer = Address::generate(&env);
+        let token_id = env.register_stellar_asset_contract(issuer);
+        let token_admin = token::StellarAssetClient::new(&env, &token_id);
+
+        client.init(&admin, &token_id, &governance);
+        let grant_id = client.grant_vesting(&admin, &beneficiary, &1000, &0, &0, &1000);
+
+        token_admin.mint(&contract_id, &1000);
+        set_timestamp(&env, 1000);
+        let _ = client.claim(&grant_id, &beneficiary);
         // If any optimization breaks logic, this will fail
-        let schedule = AcademyVestingContract::get_vesting(env, grant_id).unwrap();
+        let schedule = client.get_vesting(&grant_id);
         assert!(schedule.claimed);
     }
 }
