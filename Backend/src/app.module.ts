@@ -8,7 +8,7 @@ import { AppService } from './app.service';
 
 import { RedisModule } from './redis/redis.module';
 import { VoiceModule } from './voice/voice.module';
-import { DatabaseModule } from './database/database.module';
+// DatabaseModule removed - using PostgreSQL config in this module instead
 import { StellarMonitorModule } from './stellar-monitor/stellar-monitor.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { QueueModule } from './queue/queue.module';
@@ -26,6 +26,8 @@ import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { ApiToken } from './auth/entities/api-token.entity';
 import { AuditModule } from './audit/audit.module';
 import { AuditLog } from './audit/audit.entity';
+import { VoiceJob } from './voice/entities/voice-job.entity';
+import { ThrottleModule } from './throttle/throttle.module';
 
 
 @Module({
@@ -53,14 +55,14 @@ import { AuditLog } from './audit/audit.entity';
           LoginNonce,
           RefreshToken,
           ApiToken,
-          AuditLog, 
+          AuditLog,
+          VoiceJob,
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
       }),
     }),
 
-    DatabaseModule,
     RedisModule,
     AuthModule,
     VoiceModule,
@@ -69,6 +71,7 @@ import { AuditLog } from './audit/audit.entity';
     QueueModule,
     MarketDataModule,
     AuditModule,
+    ThrottleModule,
   ],
 
   controllers: [AppController],

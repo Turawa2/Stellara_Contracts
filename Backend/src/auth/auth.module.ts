@@ -34,6 +34,7 @@ import { AuthController } from './controllers/auth.controller';
 
 // Import Redis Module
 import { RedisModule } from '../redis/redis.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -58,7 +59,7 @@ import { RedisModule } from '../redis/redis.module';
     ConfigModule,
     RedisModule,
     ScheduleModule.forRoot(),
-  
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [
