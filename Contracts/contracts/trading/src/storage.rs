@@ -9,6 +9,7 @@
 use soroban_sdk::{contracttype, Address, Env, Symbol, Vec, symbol_short};
 
 /// Contract version for migration tracking
+#[allow(dead_code)]
 const CONTRACT_VERSION: u32 = 2;
 
 /// Optimized trade statistics - packed for efficient storage
@@ -83,6 +84,7 @@ pub enum TradingDataKey {
 /// Storage manager for trading contract
 pub struct TradingStorage;
 
+#[allow(dead_code)]
 impl TradingStorage {
     // ============ Initialization ============
     
@@ -277,13 +279,14 @@ impl TradingStorage {
 
         recent.push_back(trade_id);
 
-        if recent.len() > Self::MAX_RECENT_TRADES as usize {
-            let keep = Self::MAX_RECENT_TRADES as usize;
-            let start = recent.len().saturating_sub(keep);
+        if recent.len() > Self::MAX_RECENT_TRADES {
+            let len = recent.len();
+            let keep = Self::MAX_RECENT_TRADES;
+            let start = len.saturating_sub(keep);
             let mut trimmed = Vec::new(env);
 
             for (i, id) in recent.iter().enumerate() {
-                if i >= start {
+                if (i as u32) >= start {
                     trimmed.push_back(id);
                 }
             }
@@ -378,6 +381,11 @@ mod tests {
         match key1 {
             TradingDataKey::Init => (),
             _ => panic!("Expected Init"),
+        }
+        
+        match key2 {
+            TradingDataKey::Stats => (),
+            _ => panic!("Expected Stats"),
         }
         
         match key3 {
