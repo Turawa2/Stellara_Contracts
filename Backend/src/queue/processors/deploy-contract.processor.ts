@@ -1,5 +1,5 @@
 import { Processor, Process } from '@nestjs/bull';
-import { Job } from 'bull';
+import type { Job } from 'bull';
 import { Logger } from '@nestjs/common';
 import { JobResult } from '../types/job.types';
 
@@ -44,7 +44,7 @@ export class DeployContractProcessor {
 
       // Simulate contract deployment
       const deploymentResult = await this.deployToNetwork(
-        compilationResult.bytecode,
+        compilationResult.bytecode!,
         network,
         initializer,
       );

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue, Job } from 'bull';
+import type { Queue, Job } from 'bull';
 import { JobData, JobResult, JobStatus, JobInfo } from '../types/job.types';
 import { RedisService } from '../../redis/redis.service';
 
@@ -216,7 +216,8 @@ export class QueueService {
    */
   async purgeQueue(queueName: string): Promise<number> {
     const queue = this.getQueueByName(queueName);
-    const count = await queue.clean(0, 'failed');
+    const jobs = await queue.clean(0, 'failed');
+    const count = jobs.length;
     this.logger.log(`Purged ${count} jobs from queue ${queueName}`);
     return count;
   }

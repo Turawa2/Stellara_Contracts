@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { QueueService } from './queue.service';
+import { QueueService } from '../services/queue.service';
 
 /**
  * Example service showing how to use the QueueService
@@ -214,7 +214,7 @@ export class QueueExampleService {
       this.logger.log(`Queue ${queueName} metrics:`, stats);
 
       // Calculate health metrics
-      const totalJobs = Object.values(stats).reduce((a, b) => a + b, 0);
+      const totalJobs = Object.values(stats).reduce((a: number, b: number) => a + b, 0);
       const failureRate = totalJobs > 0 ? (stats.failed / totalJobs) * 100 : 0;
 
       return {

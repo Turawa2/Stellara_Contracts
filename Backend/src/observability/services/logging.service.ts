@@ -25,14 +25,14 @@ export class LoggingService {
       winston.format.splat(),
       winston.format.json(),
       winston.format.printf(({ level, message, timestamp, traceId, spanId, ...meta }) => {
-        const context = {
+        const context: Record<string, unknown> = {
           level,
           timestamp,
           message,
-          ...(traceId && { traceId }),
-          ...(spanId && { spanId }),
           ...meta,
         };
+        if (traceId) context.traceId = traceId;
+        if (spanId) context.spanId = spanId;
         return JSON.stringify(context);
       }),
     );

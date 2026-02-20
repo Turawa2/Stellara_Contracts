@@ -54,7 +54,7 @@ export class ApiTokenService {
     return {
       token: plainToken,
       id: saved.id,
-      expiresAt: saved.expiresAt,
+      expiresAt: saved.expiresAt ?? null,
     };
   }
 

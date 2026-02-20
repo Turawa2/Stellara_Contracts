@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 
+
 // Entities
 import { User } from './entities/user.entity';
 import { WalletBinding } from './entities/wallet-binding.entity';
@@ -33,6 +34,7 @@ import { AuthController } from './controllers/auth.controller';
 
 // Import Redis Module
 import { RedisModule } from '../redis/redis.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -57,6 +59,7 @@ import { RedisModule } from '../redis/redis.module';
     ConfigModule,
     RedisModule,
     ScheduleModule.forRoot(),
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -77,6 +80,9 @@ import { RedisModule } from '../redis/redis.module';
     RolesGuard,
   ],
   exports: [
+    // Export TypeOrmModule so that repositories defined here (User, WalletBinding, etc.)
+    // are available to any module that imports AuthModule (e.g. GdprModule).
+    TypeOrmModule,
     JwtAuthService,
     ApiTokenService,
     WalletService,

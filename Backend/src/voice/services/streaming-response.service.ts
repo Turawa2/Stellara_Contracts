@@ -91,7 +91,7 @@ export class StreamingResponseService {
     await this.voiceSessionService.updateSessionState(sessionId, ConversationState.RESPONDING);
 
     // Get response from LLM service (with quotas, rate limiting, and caching)
-    const { content: fullResponse } = await this.llmService.generateResponse(session.userId, userMessage);
+    const { content: fullResponse } = await this.llmService.generateResponse(session.userId || 'anonymous', sessionId, userMessage);
     const words = fullResponse.split(' ');
     
     // Update session state to responding

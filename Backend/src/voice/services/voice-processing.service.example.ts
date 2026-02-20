@@ -53,13 +53,13 @@ export class VoiceProcessingService {
 
       // Check if user is approaching quota limit
       const quotaStatus = llmResponse.quotaStatus;
-      const quotaPercentage = quotaStatus.monthlyUsage / quotaStatus.monthlyLimit;
+      const quotaPercentage = quotaStatus ? quotaStatus.monthlyUsage / quotaStatus.monthlyLimit : 0;
       const shouldWarnQuota = quotaPercentage > 0.9; // Warn at 90%
 
       // Log important metrics
       this.logger.debug(
         `User ${userId} - Cache: ${llmResponse.cached ? 'HIT' : 'MISS'} | ` +
-        `Monthly: ${quotaStatus.monthlyUsage}/${quotaStatus.monthlyLimit}`,
+        `Monthly: ${quotaStatus?.monthlyUsage ?? 0}/${quotaStatus?.monthlyLimit ?? 0}`,
       );
 
       return {
