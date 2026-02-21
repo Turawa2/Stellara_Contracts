@@ -162,8 +162,8 @@ impl GovernanceManager {
 
         // Clone values for event emission before moving into proposal
         let event_proposer = proposer.clone();
-        let event_new_contract_hash = new_contract_hash.clone();
-        let event_target_contract = target_contract.clone();
+        let _event_new_contract_hash = new_contract_hash.clone();
+        let _event_target_contract = target_contract.clone();
         let event_description = description.clone();
 
         let proposal = UpgradeProposal {
@@ -308,7 +308,7 @@ impl GovernanceManager {
         proposal.executed = true;
         proposal.status = ProposalStatus::Executed;
 
-        let new_contract_hash = proposal.new_contract_hash.clone();
+        let _new_contract_hash = proposal.new_contract_hash.clone();
 
         proposals.set(proposal_id, proposal);
         env.storage().persistent().set(&proposals_key, &proposals);
