@@ -13,12 +13,25 @@ import { RequestContext } from './request-context';
 export class StructuredLogger extends Logger implements LoggerService {
   private readonly logger: winston.Logger;
 
-  constructor() {
-    super();
+  /**
+   * Accept an optional `context` just like Nest's built-in Logger does.
+   * Previously callers were passing the class name to the constructor, which
+   * failed once the implementation stopped accepting parameters.  We forward
+   * the value to the base class and also keep the behaviour of the default
+   * no‑argument constructor for consumers that still inject the service via DI.
+   */
+  constructor(context?: string) {
+    // Nest's base Logger API does not accept undefined; call overload based
+    // on whether we actually received a string.
+    if (context) {
+      super(context);
+    } else {
+      super();
+    }
 
     const formats = [
       winston.format.timestamp(),
-      winston.format.printf(info => {
+      winston.format.printf((info) => {
         const correlationId = RequestContext.get('correlationId');
         const base: any = {
           timestamp: info.timestamp,
@@ -26,7 +39,7 @@ export class StructuredLogger extends Logger implements LoggerService {
           message: info.message,
           correlationId,
           context: info.context || this.context,
-          ...(info.meta || {}),
+          ...((info.meta && typeof info.meta === 'object') ? info.meta : {}),
         };
         return JSON.stringify(base);
       }),

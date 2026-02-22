@@ -17,8 +17,8 @@ async function bootstrap() {
 
   // monkey‑patch Nest's Logger prototype so `new Logger()` instances
   // also use the structured logger logic and include correlation IDs.
-  const nestProto: any = (require('@nestjs/common').Logger as any).prototype;
-  ['log', 'error', 'warn', 'debug', 'verbose'].forEach(method => {
+  const nestProto: any = require('@nestjs/common').Logger.prototype;
+  ['log', 'error', 'warn', 'debug', 'verbose'].forEach((method) => {
     const orig = nestProto[method];
     nestProto[method] = function (message: any, ...args: any[]) {
       // delegate to our global structured logger
@@ -38,7 +38,9 @@ async function bootstrap() {
   // Configure Swagger
   const config = new DocumentBuilder()
     .setTitle('Stellara API')
-    .setDescription('API for authentication, monitoring Stellar network events, and delivering webhooks')
+    .setDescription(
+      'API for authentication, monitoring Stellar network events, and delivering webhooks',
+    )
     .setVersion('1.0')
     .addTag('Authentication')
     .addTag('Stellar Monitor')
@@ -59,8 +61,11 @@ async function bootstrap() {
   const globalFilter = new AllExceptionsFilter(errorTracker, metricsService);
   app.useGlobalFilters(globalFilter);
 
-  // expose Prometheus metrics on a simple endpoint
-  app.get('/metrics', async (_req, res) => {
+  // expose Prometheus metrics on a simple endpoint via the underlying
+  // Express application rather than the Nest `get` which is meant for
+  // resolving providers.  The previous call resulted in a type error.
+  const expressApp: any = app.getHttpAdapter().getInstance();
+  expressApp.get('/metrics', async (_req, res) => {
     res.set('Content-Type', 'text/plain');
     res.send(await metricsService.getMetrics());
   });

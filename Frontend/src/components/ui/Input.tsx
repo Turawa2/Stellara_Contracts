@@ -17,6 +17,18 @@ export const Input: React.FC<InputProps> = ({
   const widthClass = fullWidth ? 'w-full' : '';
   const classes = `${baseClasses} ${widthClass} ${className}`;
   
+  const inputElement = (
+    <input
+      className={classes}
+      {...props}
+    />
+  );
+  
+  // If no label and no error, return just the input element
+  if (!label && !error) {
+    return inputElement;
+  }
+  
   return (
     <div className="mb-4">
       {label && (
@@ -24,10 +36,7 @@ export const Input: React.FC<InputProps> = ({
           {label}
         </label>
       )}
-      <input
-        className={classes}
-        {...props}
-      />
+      {inputElement}
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
