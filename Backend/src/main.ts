@@ -4,9 +4,36 @@ import { RedisIoAdapter } from './websocket/redis-io.adapter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ThrottleGuard } from './throttle/throttle.guard';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+
+// Initialize OpenTelemetry SDK
+const traceExporter = new OTLPTraceExporter({
+  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces',
+});
+
+const sdk = new NodeSDK({
+  traceExporter,
+  instrumentations: [getNodeAutoInstrumentations()],
+});
+
+sdk.start().then(() => {
+  console.log('OpenTelemetry initialized');
+}).catch((error) => {
+  console.error('Error initializing OpenTelemetry', error);
+});
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Ensure OpenTelemetry shutdown on app termination
+  const shutdown = async () => {
+    await sdk.shutdown();
+    console.log('OpenTelemetry shut down');
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 
   // Enable validation globally
   app.useGlobalPipes(
