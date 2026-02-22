@@ -39,7 +39,7 @@ export class StructuredLogger extends Logger implements LoggerService {
           message: info.message,
           correlationId,
           context: info.context || this.context,
-          ...(info.meta || {}),
+          ...((info.meta && typeof info.meta === 'object') ? info.meta : {}),
         };
         return JSON.stringify(base);
       }),

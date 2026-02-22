@@ -243,7 +243,7 @@ export class DistributedRateLimitService {
     const violationHistory = await this.getViolationHistory(identifier);
 
     return {
-      violations: parseInt(violations || '0', 10),
+      violations: parseInt(violations as string ?? '0', 10),
       isBanned,
       violationHistory,
     };

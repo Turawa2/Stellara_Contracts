@@ -42,7 +42,7 @@ export class ResponseTransformInterceptor<T> implements NestInterceptor<
             timestamp: new Date().toISOString(),
             data: v.data,
             meta: v.meta,
-          } as ApiResponseDto<T>;
+          } as unknown as ApiResponseDto<T>;
         }
 
         return {

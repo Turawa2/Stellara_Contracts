@@ -47,7 +47,7 @@ export class QueueHealthIndicator {
 
       return {
         name: 'queue',
-        status,
+        status: status as 'up' | 'down' | 'degraded' | 'unknown',
         message,
         details,
         timestamp: new Date().toISOString(),
@@ -97,12 +97,18 @@ export class QueueHealthIndicator {
       // Get queue job counts
       const counts = await queue.getJobCounts();
 
-      const result = {
+      const result: {
+        name: string;
+        active: number;
+        waiting: number;
+        failed: number;
+        status: 'up' | 'down' | 'degraded' | 'unknown';
+      } = {
         name: queueName,
         active: counts.active || 0,
         waiting: counts.waiting || 0,
         failed: counts.failed || 0,
-        status: 'up' as const,
+        status: 'up',
       };
 
       // Check for potential issues

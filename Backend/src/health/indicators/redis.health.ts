@@ -59,7 +59,7 @@ export class RedisHealthIndicator {
 
       return {
         name: 'redis',
-        status,
+        status: status as 'up' | 'down' | 'degraded' | 'unknown',
         message,
         details,
         timestamp: new Date().toISOString(),
@@ -93,8 +93,8 @@ export class RedisHealthIndicator {
       const keyCount = await client.dbSize();
 
       return {
-        usedMemory: parseInt(usedMemory, 10) || 0,
-        maxMemory: parseInt(maxMemory, 10) || 0,
+        usedMemory: parseInt(usedMemory as string, 10) || 0,
+        maxMemory: parseInt(maxMemory as string, 10) || 0,
         keyCount,
       };
     } catch (error) {

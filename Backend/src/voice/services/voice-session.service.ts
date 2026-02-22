@@ -54,7 +54,7 @@ export class VoiceSessionService implements OnModuleInit {
         return null;
       }
 
-      const session = JSON.parse(sessionData);
+      const session = typeof sessionData === 'string' ? JSON.parse(sessionData) : sessionData;
       return {
         ...session,
         createdAt: new Date(session.createdAt),
@@ -193,7 +193,7 @@ export class VoiceSessionService implements OnModuleInit {
         const sessionData = await this.redisService.client.get(key);
         if (!sessionData) continue;
 
-        const session = JSON.parse(sessionData);
+        const session = typeof sessionData === 'string' ? JSON.parse(sessionData) : sessionData;
         const lastActivity = new Date(session.lastActivityAt).getTime();
         const ttl = session.ttl * 1000; // Convert to milliseconds
 

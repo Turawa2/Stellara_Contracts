@@ -47,7 +47,7 @@ export class DatabaseHealthIndicator {
 
       return {
         name: 'database',
-        status,
+        status: status as 'up' | 'down' | 'degraded' | 'unknown',
         message,
         details,
         timestamp: new Date().toISOString(),
@@ -111,7 +111,6 @@ export class DatabaseHealthIndicator {
 
         // Get pending migrations count
         const pendingMigrations = await this.dataSource.runMigrations({
-          dryRun: true,
           transaction: 'none',
         });
 
