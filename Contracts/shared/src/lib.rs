@@ -14,6 +14,9 @@ pub mod events;
 pub mod fees;
 pub mod governance;
 
+#[cfg(test)]
+mod governance_tests;
+
 /// Standard contract error codes
 pub mod errors {
     pub const UNAUTHORIZED: &str = "UNAUTHORIZED";
