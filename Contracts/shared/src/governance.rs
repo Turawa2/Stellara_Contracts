@@ -20,6 +20,16 @@ pub struct UpgradeProposal {
     pub created_at: u64,
     pub execution_time: u64,               // Timelock: when it can be executed
     pub executed: bool,
+    
+    // New fields for security enhancements
+    pub cooling_off_period: u64,           // Minimum time before first approval
+    pub current_version: u32,              // Current contract version
+    pub proposed_version: u32,             // Proposed contract version
+    pub simulation_passed: bool,           // Whether simulation tests passed
+    pub simulation_metadata: Symbol,       // Simulation results summary
+    pub breaking_change: bool,             // Whether this is a breaking change
+    pub halt_reason: Symbol,               // Reason if halted (empty if not halted)
+    pub halted_at: u64,                    // When it was halted (0 if not halted)
 }
 
 /// Status of an upgrade proposal
@@ -32,6 +42,7 @@ pub enum ProposalStatus {
     Rejected = 2,
     Executed = 3,
     Cancelled = 4,
+    Halted = 5,        // New status for emergency halts
 }
 
 /// Governance role
@@ -48,6 +59,7 @@ pub enum GovernanceRole {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum GovernanceError {
+    // Existing errors
     Unauthorized = 2001,
     InvalidProposal = 2002,
     InsufficientApprovals = 2003,
@@ -56,6 +68,24 @@ pub enum GovernanceError {
     InvalidThreshold = 2006,
     DuplicateApproval = 2007,
     ProposalNotFound = 2008,
+    
+    // New validation errors
+    InvalidHashFormat = 2009,
+    InvalidContractAddress = 2010,
+    TimelockTooShort = 2011,
+    DuplicateApprover = 2012,
+    InvalidVersion = 2013,
+    VersionNotIncreasing = 2014,
+    
+    // New halt errors
+    ProposalHalted = 2015,
+    CannotHaltExecuted = 2016,
+    NotHalted = 2017,
+    
+    // New approval errors
+    CoolingOffNotExpired = 2018,
+    ApprovalNotFound = 2019,
+    CannotRevokeAfterThreshold = 2020,
 }
 
 impl From<GovernanceError> for soroban_sdk::Error {
@@ -137,6 +167,16 @@ impl GovernanceManager {
             created_at: env.ledger().timestamp(),
             execution_time: env.ledger().timestamp() + timelock_delay,
             executed: false,
+            
+            // New fields with default values
+            cooling_off_period: 3600,          // 1 hour default cooling-off
+            current_version: 1,                // Default to version 1
+            proposed_version: 2,               // Default to version 2
+            simulation_passed: true,           // Default to passed
+            simulation_metadata: symbol_short!("none"),  // No simulation by default
+            breaking_change: false,            // Default to non-breaking
+            halt_reason: symbol_short!(""),    // Empty halt reason
+            halted_at: 0,                      // Not halted
         };
 
         // Store proposal
