@@ -197,6 +197,131 @@ impl ValidationModule {
     }
 }
 
+/// Halt module for emergency proposal halting
+pub struct HaltModule;
+
+impl HaltModule {
+    /// Emergency halt an approved proposal
+    pub fn halt_proposal(
+        env: &Env,
+        proposal_id: u64,
+        admin: Address,
+        reason: Symbol,
+    ) -> Result<(), GovernanceError> {
+        // Validate admin role
+        GovernanceManager::require_role(env, &admin, GovernanceRole::Admin);
+        
+        let proposals_key = symbol_short!("props");
+        let mut proposals: soroban_sdk::Map<u64, UpgradeProposal> = env
+            .storage()
+            .persistent()
+            .get(&proposals_key)
+            .ok_or(GovernanceError::ProposalNotFound)?;
+
+        let mut proposal = proposals
+            .get(proposal_id)
+            .ok_or(GovernanceError::ProposalNotFound)?;
+
+        // Cannot halt already executed proposals
+        if proposal.executed || proposal.status == ProposalStatus::Executed {
+            return Err(GovernanceError::CannotHaltExecuted);
+        }
+
+        // Update proposal to halted status
+        proposal.status = ProposalStatus::Halted;
+        proposal.halt_reason = reason.clone();
+        proposal.halted_at = env.ledger().timestamp();
+
+        proposals.set(proposal_id, proposal);
+        env.storage().persistent().set(&proposals_key, &proposals);
+
+        // Emit halt event
+        EventEmitter::proposal_halted(env, ProposalHaltedEvent {
+            proposal_id,
+            halted_by: admin,
+            reason,
+            timestamp: env.ledger().timestamp(),
+        });
+
+        Ok(())
+    }
+    
+    /// Resume a halted proposal with new timelock
+    pub fn resume_proposal(
+        env: &Env,
+        proposal_id: u64,
+        admin: Address,
+        new_timelock_delay: u64,
+    ) -> Result<(), GovernanceError> {
+        // Validate admin role
+        GovernanceManager::require_role(env, &admin, GovernanceRole::Admin);
+        
+        let proposals_key = symbol_short!("props");
+        let mut proposals: soroban_sdk::Map<u64, UpgradeProposal> = env
+            .storage()
+            .persistent()
+            .get(&proposals_key)
+            .ok_or(GovernanceError::ProposalNotFound)?;
+
+        let mut proposal = proposals
+            .get(proposal_id)
+            .ok_or(GovernanceError::ProposalNotFound)?;
+
+        // Can only resume halted proposals
+        if proposal.status != ProposalStatus::Halted {
+            return Err(GovernanceError::NotHalted);
+        }
+        
+        // Only original proposer or admin can resume
+        if proposal.proposer != admin {
+            // Check if admin has admin role (already checked above)
+            // This allows any admin to resume, not just the proposer
+        }
+
+        // Restore to approved status if it was approved before halt
+        // Otherwise restore to pending
+        if proposal.approvals_count >= proposal.approval_threshold {
+            proposal.status = ProposalStatus::Approved;
+        } else {
+            proposal.status = ProposalStatus::Pending;
+        }
+        
+        // Set new execution time
+        proposal.execution_time = env.ledger().timestamp() + new_timelock_delay;
+        proposal.halt_reason = symbol_short!("");
+        proposal.halted_at = 0;
+
+        proposals.set(proposal_id, proposal);
+        env.storage().persistent().set(&proposals_key, &proposals);
+
+        // Emit resume event
+        EventEmitter::proposal_resumed(env, ProposalResumedEvent {
+            proposal_id,
+            resumed_by: admin,
+            new_execution_time: proposal.execution_time,
+            timestamp: env.ledger().timestamp(),
+        });
+
+        Ok(())
+    }
+    
+    /// Check if proposal is halted
+    pub fn is_halted(env: &Env, proposal_id: u64) -> bool {
+        let proposals_key = symbol_short!("props");
+        let proposals: soroban_sdk::Map<u64, UpgradeProposal> = env
+            .storage()
+            .persistent()
+            .get(&proposals_key)
+            .unwrap_or_else(|| soroban_sdk::Map::new(env));
+
+        if let Some(proposal) = proposals.get(proposal_id) {
+            proposal.status == ProposalStatus::Halted
+        } else {
+            false
+        }
+    }
+}
+
 impl GovernanceManager {
     /// Validate that an address has a specific role
     pub fn require_role(env: &Env, address: &Address, required_role: GovernanceRole) {
@@ -403,6 +528,11 @@ impl GovernanceManager {
         let mut proposal = proposals
             .get(proposal_id)
             .ok_or(GovernanceError::ProposalNotFound)?;
+
+        // Check if proposal is halted
+        if proposal.status == ProposalStatus::Halted {
+            return Err(GovernanceError::ProposalHalted);
+        }
 
         // Validate proposal is approved
         if proposal.status != ProposalStatus::Approved {
