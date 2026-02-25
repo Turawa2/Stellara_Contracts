@@ -32,9 +32,9 @@ import { RolesGuard } from './guards/roles.guard';
 // Controllers
 import { AuthController } from './controllers/auth.controller';
 
-// Import Redis Module
 import { RedisModule } from '../redis/redis.module';
 import { AuditModule } from '../audit/audit.module';
+import { ThrottleModule } from '../throttle/throttle.module';
 
 @Module({
   imports: [
@@ -60,6 +60,7 @@ import { AuditModule } from '../audit/audit.module';
     RedisModule,
     ScheduleModule.forRoot(),
     AuditModule,
+    ThrottleModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -69,10 +70,10 @@ import { AuditModule } from '../audit/audit.module';
     JwtAuthService,
     ApiTokenService,
     RateLimitService,
-    
+
     // Strategies
     JwtStrategy,
-    
+
     // Guards
     JwtAuthGuard,
     ApiTokenGuard,
@@ -88,4 +89,4 @@ import { AuditModule } from '../audit/audit.module';
     RolesGuard,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }
