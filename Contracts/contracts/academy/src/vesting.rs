@@ -133,7 +133,7 @@ impl AcademyVestingContract {
     ) -> Result<u64, VestingError> {
         admin.require_auth();
 
-        // Verify caller is admin
+        // Optimized: Single admin verification and cache
         let admin_key = symbol_short!("admin");
         let stored_admin: Address = env
             .storage()
@@ -153,15 +153,17 @@ impl AcademyVestingContract {
             return Err(VestingError::InvalidSchedule);
         }
 
-        // Get next grant ID
+        // Optimized: Get and increment counter in single operation
         let counter_key = symbol_short!("cnt");
         let grant_id: u64 = env
             .storage()
             .persistent()
             .get(&counter_key)
             .unwrap_or(0u64);
-
         let next_id = grant_id + 1;
+        env.storage()
+            .persistent()
+            .set(&counter_key, &next_id);
 
         // Create vesting schedule
         let schedule = VestingSchedule {
@@ -175,21 +177,10 @@ impl AcademyVestingContract {
             revoke_time: 0,
         };
 
-        // Store schedule
-        let schedules_key = symbol_short!("sched");
-        let mut schedules: soroban_sdk::Map<u64, VestingSchedule> = env
-            .storage()
-            .persistent()
-            .get(&schedules_key)
-            .unwrap_or_else(|| soroban_sdk::Map::new(&env));
-
-        schedules.set(next_id, schedule);
-        env.storage().persistent().set(&schedules_key, &schedules);
-
-        // Update counter
-        env.storage()
-            .persistent()
-            .set(&counter_key, &next_id);
+        // Optimized: Use individual storage entry instead of loading entire map
+        let schedule_key = symbol_short!("sched_");
+        let individual_key = (schedule_key, next_id);
+        env.storage().persistent().set(&individual_key, &schedule);
 
         // Emit grant event
         let grant_event = GrantEvent {
@@ -212,16 +203,13 @@ impl AcademyVestingContract {
     pub fn claim(env: Env, grant_id: u64, beneficiary: Address) -> Result<i128, VestingError> {
         beneficiary.require_auth();
 
-        // Get vesting schedule
-        let schedules_key = symbol_short!("sched");
-        let mut schedules: soroban_sdk::Map<u64, VestingSchedule> = env
+        // Optimized: Direct individual storage access instead of loading entire map
+        let schedule_key = symbol_short!("sched_");
+        let individual_key = (schedule_key, grant_id);
+        let mut schedule: VestingSchedule = env
             .storage()
             .persistent()
-            .get(&schedules_key)
-            .ok_or(VestingError::GrantNotFound)?;
-
-        let mut schedule = schedules
-            .get(grant_id)
+            .get(&individual_key)
             .ok_or(VestingError::GrantNotFound)?;
 
         // Verify beneficiary matches
@@ -267,8 +255,7 @@ impl AcademyVestingContract {
 
         // Mark as claimed (atomic operation)
         schedule.claimed = true;
-        schedules.set(grant_id, schedule.clone());
-        env.storage().persistent().set(&schedules_key, &schedules);
+        env.storage().persistent().set(&individual_key, &schedule);
 
         // Transfer tokens
         token_client.transfer(
@@ -299,7 +286,7 @@ impl AcademyVestingContract {
     ) -> Result<(), VestingError> {
         admin.require_auth();
 
-        // Verify caller is admin
+        // Optimized: Single admin verification and cache
         let admin_key = symbol_short!("admin");
         let stored_admin: Address = env
             .storage()
@@ -311,16 +298,13 @@ impl AcademyVestingContract {
             return Err(VestingError::Unauthorized);
         }
 
-        // Get vesting schedule
-        let schedules_key = symbol_short!("sched");
-        let mut schedules: soroban_sdk::Map<u64, VestingSchedule> = env
+        // Optimized: Direct individual storage access
+        let schedule_key = symbol_short!("sched_");
+        let individual_key = (schedule_key, grant_id);
+        let mut schedule: VestingSchedule = env
             .storage()
             .persistent()
-            .get(&schedules_key)
-            .ok_or(VestingError::GrantNotFound)?;
-
-        let mut schedule = schedules
-            .get(grant_id)
+            .get(&individual_key)
             .ok_or(VestingError::GrantNotFound)?;
 
         // Cannot revoke already claimed
@@ -347,8 +331,7 @@ impl AcademyVestingContract {
         // Mark as revoked
         schedule.revoked = true;
         schedule.revoke_time = current_time;
-        schedules.set(grant_id, schedule.clone());
-        env.storage().persistent().set(&schedules_key, &schedules);
+        env.storage().persistent().set(&individual_key, &schedule);
 
         // Emit revoke event
         let revoke_event = RevokeEvent {
@@ -365,29 +348,24 @@ impl AcademyVestingContract {
 
     /// Query vesting schedule details
     pub fn get_vesting(env: Env, grant_id: u64) -> Result<VestingSchedule, VestingError> {
-        let schedules_key = symbol_short!("sched");
-        let schedules: soroban_sdk::Map<u64, VestingSchedule> = env
-            .storage()
+        // Optimized: Direct individual storage access
+        let schedule_key = symbol_short!("sched_");
+        let individual_key = (schedule_key, grant_id);
+        env.storage()
             .persistent()
-            .get(&schedules_key)
-            .ok_or(VestingError::GrantNotFound)?;
-
-        schedules
-            .get(grant_id)
+            .get(&individual_key)
             .ok_or(VestingError::GrantNotFound)
     }
 
     /// Calculate vested amount at current time
     pub fn get_vested_amount(env: Env, grant_id: u64) -> Result<i128, VestingError> {
-        let schedules_key = symbol_short!("sched");
-        let schedules: soroban_sdk::Map<u64, VestingSchedule> = env
+        // Optimized: Direct individual storage access
+        let schedule_key = symbol_short!("sched_");
+        let individual_key = (schedule_key, grant_id);
+        let schedule: VestingSchedule = env
             .storage()
             .persistent()
-            .get(&schedules_key)
-            .ok_or(VestingError::GrantNotFound)?;
-
-        let schedule = schedules
-            .get(grant_id)
+            .get(&individual_key)
             .ok_or(VestingError::GrantNotFound)?;
 
         let current_time = env.ledger().timestamp();

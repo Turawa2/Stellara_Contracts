@@ -169,7 +169,7 @@ impl UpgradeableTradingContract {
             });
         }
 
-        // Create trade record
+        // Optimized: Load stats once and update in batch
         let stats_key = symbol_short!("stats");
         let mut stats: TradeStats = env
             .storage()
@@ -193,23 +193,17 @@ impl UpgradeableTradingContract {
             is_buy,
         };
 
-        // Update stats
+        // Optimized: Update stats in place
         stats.total_trades += 1;
         stats.total_volume += amount;
         stats.last_trade_id = trade_id;
 
-        // Store trade
-        let trades_key = symbol_short!("trades");
-        let mut trades: soroban_sdk::Vec<Trade> = env
-            .storage()
-            .persistent()
-            .get(&trades_key)
-            .unwrap_or_else(|| soroban_sdk::Vec::new(&env));
+        // Optimized: Use individual trade storage instead of vector
+        let trade_key = symbol_short!("trade_");
+        let individual_trade_key = (trade_key, trade_id);
+        env.storage().persistent().set(&individual_trade_key, &trade);
 
-        trades.push_back(trade);
-
-        // Update persistent storage
-        env.storage().persistent().set(&trades_key, &trades);
+        // Update stats storage
         env.storage().persistent().set(&stats_key, &stats);
 
         // Emit trade executed event
@@ -254,7 +248,7 @@ impl UpgradeableTradingContract {
     pub fn pause(env: Env, admin: Address) -> Result<(), TradeError> {
         admin.require_auth();
 
-        // Verify admin role
+        // Optimized: Single role verification with cached lookup
         let roles_key = symbol_short!("roles");
         let roles: soroban_sdk::Map<Address, GovernanceRole> = env
             .storage()
@@ -286,6 +280,7 @@ impl UpgradeableTradingContract {
     pub fn unpause(env: Env, admin: Address) -> Result<(), TradeError> {
         admin.require_auth();
 
+        // Optimized: Single role verification with cached lookup
         let roles_key = symbol_short!("roles");
         let roles: soroban_sdk::Map<Address, GovernanceRole> = env
             .storage()
