@@ -16,7 +16,7 @@ fn compute_payload(env: &Env, contract: &Address, key: &Symbol, subject: &Val, l
     v.push_back(key.clone().into_val(env));
     v.push_back(subject.clone());
     v.push_back(ledger.into_val(env));
-    env.serialize(&v)
+    env.serialize_to_bytes(&v)
 }
 
 pub fn compute_commitment(env: &Env, contract: &Address, key: &Symbol, subject: &Val, ledger: u32) -> BytesN<32> {
@@ -56,10 +56,12 @@ pub fn verify_with_contract(env: &Env, contract: &Address, key: &Symbol, subject
     let mut args = Vec::new(env);
     args.push_back(key.clone().into_val(env));
     args.push_back(subject.clone());
-    let res: Result<BytesN<32>, Error> = env.try_invoke_contract(contract, &f, args);
+
+    let res = env.try_invoke_contract::<BytesN<32>>(contract, &f, args);
     match res {
         Ok(remote_digest) => {
-            let digest = compute_commitment(env, contract, key, subject, env.ledger().sequence());
+            let digest =
+                compute_commitment(env, contract, key, subject, env.ledger().sequence());
             remote_digest == digest
         }
         Err(_) => false,

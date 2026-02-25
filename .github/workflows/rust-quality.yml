@@ -22,9 +22,9 @@ jobs:
         override: true
         components: rustfmt, clippy
         
-    - name: Install Soroban CLI
+    - name: Install Soroban / Stellar CLI
       run: |
-        curl -LsSf https://soroban.stellar.org/install.sh | sh
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         
     - name: Cache dependencies
@@ -57,9 +57,9 @@ jobs:
         toolchain: stable
         override: true
       
-    - name: Install Soroban CLI
+    - name: Install Soroban / Stellar CLI
       run: |
-        curl -LsSf https://soroban.stellar.org/install.sh | sh
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         
     - name: Cache dependencies
