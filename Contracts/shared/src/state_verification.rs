@@ -1,5 +1,7 @@
 use soroban_sdk::{
-    contracttype, symbol_short, Address, Bytes, BytesN, Env, Error, IntoVal, Map, Symbol, Val, Vec,
+    contracttype, symbol_short,
+    xdr::{FromXdr, ToXdr},
+    Address, Bytes, BytesN, Env, Error, IntoVal, Map, Symbol, Val, Vec,
 };
 
 #[contracttype]
@@ -7,7 +9,7 @@ use soroban_sdk::{
 pub struct StateProof {
     pub contract: Address,
     pub key: Symbol,
-    pub subject: Val,
+    pub subject: Bytes,
     pub digest: BytesN<32>,
     pub ledger: u32,
 }
@@ -19,12 +21,12 @@ fn compute_payload(
     subject: &Val,
     ledger: u32,
 ) -> Bytes {
-    let mut v = Vec::new(env);
-    v.push_back(contract.clone().into_val(env));
-    v.push_back(key.clone().into_val(env));
-    v.push_back(subject.clone());
-    v.push_back(ledger.into_val(env));
-    env.serialize_to_bytes(&v)
+    let mut args = Vec::new(env);
+    args.push_back(contract.clone().into_val(env));
+    args.push_back(key.clone().into_val(env));
+    args.push_back(*subject);
+    args.push_back(ledger.into_val(env));
+    args.to_xdr(env)
 }
 
 pub fn compute_commitment(
@@ -81,7 +83,7 @@ pub fn verify_with_contract(env: &Env, contract: &Address, key: &Symbol, subject
     let f = Symbol::new(env, "state_commitment");
     let mut args = Vec::new(env);
     args.push_back(key.clone().into_val(env));
-    args.push_back(subject.clone());
+    args.push_back(*subject);
     let res = env.try_invoke_contract::<BytesN<32>, Error>(contract, &f, args);
     match res {
         Ok(Ok(remote_digest)) => {
@@ -98,7 +100,7 @@ pub fn make_proof(env: &Env, contract: &Address, key: &Symbol, subject: &Val) ->
     StateProof {
         contract: contract.clone(),
         key: key.clone(),
-        subject: subject.clone(),
+        subject: (*subject).to_xdr(env),
         digest,
         ledger,
     }
@@ -108,11 +110,15 @@ pub fn verify_proof(env: &Env, proof: &StateProof) -> bool {
     if !is_trusted(env, &proof.contract) {
         return false;
     }
+    let subject = match Val::from_xdr(env, &proof.subject) {
+        Ok(subject) => subject,
+        Err(_) => return false,
+    };
     let expected = compute_commitment(
         env,
         &proof.contract,
         &proof.key,
-        &proof.subject,
+        &subject,
         env.ledger().sequence(),
     );
     proof.digest == expected

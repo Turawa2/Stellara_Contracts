@@ -108,6 +108,7 @@ pub struct ValidationModule;
 
 impl ValidationModule {
     /// Validate all proposal parameters before creation
+    #[allow(clippy::too_many_arguments)]
     pub fn validate_proposal_params(
         env: &Env,
         new_contract_hash: &Symbol,
@@ -125,7 +126,7 @@ impl ValidationModule {
         Self::validate_contract_address(env, target_contract)?;
 
         // Validate threshold
-        Self::validate_threshold(approval_threshold, approvers.len() as u32)?;
+        Self::validate_threshold(approval_threshold, approvers.len())?;
 
         // Validate timelock
         Self::validate_timelock(timelock_delay)?;
@@ -178,7 +179,7 @@ impl ValidationModule {
     fn validate_approvers_unique(approvers: &Vec<Address>) -> Result<(), GovernanceError> {
         for i in 0..approvers.len() {
             for j in (i + 1)..approvers.len() {
-                if approvers.get(i as u32).unwrap() == approvers.get(j as u32).unwrap() {
+                if approvers.get(i).unwrap() == approvers.get(j).unwrap() {
                     return Err(GovernanceError::DuplicateApprover);
                 }
             }
@@ -553,6 +554,7 @@ impl GovernanceManager {
     }
 
     /// Create a new upgrade proposal
+    #[allow(clippy::too_many_arguments)]
     pub fn propose_upgrade(
         env: &Env,
         proposer: Address,

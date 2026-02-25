@@ -1,16 +1,14 @@
 #![no_std]
+#![allow(clippy::too_many_arguments)]
 use shared::events::{
     ContractPausedEvent, ContractUnpausedEvent, EventEmitter, FeeCollectedEvent, TradeExecutedEvent,
 };
 use shared::fees::{FeeError, FeeManager};
-use shared::fees::{FeeError, FeeManager};
-use shared::governance::{GovernanceManager, GovernanceRole, UpgradeProposal};
 use shared::governance::{GovernanceManager, GovernanceRole, UpgradeProposal};
 use shared::state_verification::{is_trusted, trust_add, verify_with_contract};
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, Env, IntoVal, Symbol,
 };
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
 
 /// Version of this contract implementation
 const CONTRACT_VERSION: u32 = 1;
