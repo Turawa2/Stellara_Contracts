@@ -6,6 +6,7 @@ import { motion, type Variants } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Navbar from '@/components/Navigation/Navbar';
+import StayInspired from '@/components/sections/StayInspired';
 
 export default function Home() {
   const containerVariants: Variants = {
@@ -61,7 +62,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-7xl mx-auto">
@@ -81,7 +82,7 @@ export default function Home() {
               variants={itemVariants}
               className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed"
             >
-              The intelligent Web3 crypto academy built on the Stellar ecosystem. 
+              The intelligent Web3 crypto academy built on the Stellar ecosystem.
               Start your journey into cryptocurrency and blockchain today.
             </motion.p>
             <motion.div
@@ -124,7 +125,7 @@ export default function Home() {
               Discover the features that make Stellara the premier platform for Web3 education
             </motion.p>
           </motion.div>
-          
+
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -158,6 +159,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Stay Inspired Section */}
+      <StayInspired />
+
       {/* CTA Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -185,17 +189,17 @@ export default function Home() {
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
               <Link href="/about">
-                <Button 
-                  variant="secondary" 
-                  size="lg" 
+                <Button
+                  variant="secondary"
+                  size="lg"
                   className="px-8 bg-white text-blue-600 hover:bg-gray-100"
                 >
                   Learn About Us
                 </Button>
               </Link>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="px-8 border-2 border-white text-white hover:bg-white hover:text-blue-600"
               >
                 Get Started
